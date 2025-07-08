@@ -1,115 +1,153 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import {
+  Box,
+  SimpleGrid,
+  Heading,
+  Text,
+  Button,
+  Image,
+  VStack,
+  HStack,
+  Badge,
+  Input,
+  Spinner,
+} from '@chakra-ui/react';
+import { GetServerSideProps } from 'next';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+type Card = {
+  name: string;
+  url: string;
+};
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+type HomeProps = {
+  cards: Card[];
+};
 
-export default function Home() {
-  return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
+export default function Home({ cards }: HomeProps) {
+  const router = useRouter();
+  const [searchInput, setSearchInput] = useState('');
+  const [searchResult, setSearchResult] = useState<any | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [errorText, setErrorText] = useState('');
+
+  const handleClick = (name: string) => {
+    router.push(`/pokemon/${name}`);
+  };
+
+  const handleSearch = async () => {
+    if (!searchInput.trim()) return;
+
+    setLoading(true);
+    setSearchResult(null);
+    setErrorText('');
+
+    try {
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${searchInput.toLowerCase()}`);
+      if (!res.ok) throw new Error('Not Found');
+      const data = await res.json();
+      setSearchResult(data);
+    } catch {
+      setErrorText(`Pokémon "${searchInput}" not found.`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderCard = (name: string, imageUrl: string, id: string | number | undefined) => (
+    <Box
+      bg="white"
+      borderRadius="2xl"
+      boxShadow="md"
+      transition="all 0.2s ease-in-out"
+      _hover={{ transform: 'translateY(-5px)', boxShadow: 'xl' }}
+      overflow="hidden"
     >
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/pages/index.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      <Image
+        src={imageUrl}
+        alt={name}
+        objectFit="contain"
+        w="100%"
+        h="200px"
+        bg="gray.100"
+      />
+
+      <VStack gap={2} align="stretch" p={6}>
+        <Heading size="md" textTransform="capitalize" textAlign="center" color="#000">
+          {name}
+        </Heading>
+
+        <Text fontSize="sm" color="gray.500" textAlign="center">
+          #{id}
+        </Text>
+
+        <Button
+          colorScheme="teal"
+          variant="outline"
+          mt={4}
+          onClick={() => handleClick(name)}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+          Learn More
+        </Button>
+      </VStack>
+    </Box>
+  );
+
+  return (
+    <Box px={8} py={12} maxW="100%" mx="auto" bg="gray.50" minH="100vh" bgColor="#000">
+      <Heading mb={6} textAlign="center" fontWeight="bold" fontSize={{ base: '2xl', md: '3xl' }}>
+        Discover Pokémon
+      </Heading>
+
+      <Box maxW="400px" mx="auto" mb={6}>
+        <VStack gap={3}>
+          <Input
+            placeholder="Search Pokémon by name or ID"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            bg="white"
+            color="black"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <Button colorScheme="teal" onClick={handleSearch}>
+            Search
+          </Button>
+          {loading && <Spinner size="md" color="teal.300" />}
+          {errorText && <Text color="red.400">{errorText}</Text>}
+        </VStack>
+      </Box>
+
+      {searchResult && (
+        <Box mb={12} maxW="400px" mx="auto">
+          {renderCard(
+            searchResult.name,
+            searchResult.sprites.other['official-artwork'].front_default,
+            searchResult.id
+          )}
+        </Box>
+      )}
+
+      <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={8}>
+        {cards.map((card, index) => {
+          const pokemonId = card.url.split('/').filter(Boolean).pop();
+          const imageUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`;
+          return (
+            <Box key={index}>
+              {renderCard(card.name, imageUrl, pokemonId)}
+            </Box>
+          );
+        })}
+      </SimpleGrid>
+    </Box>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=20');
+  const data = await res.json();
+
+  return {
+    props: {
+      cards: data.results,
+    },
+  };
+};
