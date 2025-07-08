@@ -15,7 +15,7 @@ import {
   Stat,
   StatLabel,
   StatNumber,
-} from '@chakra-ui/stat'; // ✅ fixed path (Chakra v2 includes Stat here)
+} from '@chakra-ui/stat';
 
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
@@ -70,7 +70,6 @@ export default function PokemonDetail({ pokemon }: PokemonDetailProps) {
           ))}
         </HStack>
 
-        {/* Info grid with color-fixed stats */}
         <SimpleGrid columns={[1, 2]} gap={6} w="100%" mt={4}>
           <Stat>
             <StatLabel color="black">Height</StatLabel>
