@@ -6,8 +6,6 @@ import {
   Button,
   Image,
   VStack,
-  HStack,
-  Badge,
   Input,
   Spinner,
 } from '@chakra-ui/react';
